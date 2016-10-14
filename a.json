@@ -4,7 +4,7 @@
   "parameters": {
     "omsWorkspaceName": {
       "type": "string",
-      "defaultValue": "OMSLA",
+      "defaultValue": "TietoTest2",
       "metadata": {
         "description": "Assign a name for the Log Analytic Workspace Name"
       }
