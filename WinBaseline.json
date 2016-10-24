@@ -1,0 +1,241 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "omsWorkspaceName": {
+      "type": "string",
+      "defaultValue": "TietoTest2",
+      "metadata": {
+        "description": "Assign a name for the Log Analytic Workspace Name"
+      }
+    },
+    "omsWorkspaceRegion": {
+      "type": "string",
+      "defaultValue": "West Europe",
+      "allowedValues": [
+        "East US",
+        "West Europe",
+		"westeurope",
+        "Southeast Asia",
+        "Australia Southeast"
+      ],
+      "metadata": {
+        "description": "Specify the region for your Workspace"
+      }
+    }
+  },
+  "variables": {
+    "securitySolution": "[concat('Security', '(', parameters('omsWorkspaceName'), ')')]",
+    "securitySolutionName": "Security",
+    "agentSolution": "[concat('AgentHealthAssessment', '(', parameters('omsWorkspaceName'), ')')]",
+    "agentSolutionName": "AgentHealthAssessment",
+    "changeTrackingSolution": "[concat('ChangeTracking', '(', parameters('omsWorkspaceName'), ')')]",
+    "changeTrackingSolutionName": "ChangeTracking",
+    "updatesSolution": "[concat('Updates', '(', parameters('omsWorkspaceName'), ')')]",
+    "updatesSolutionName": "Updates"
+  },
+  "resources": [
+				{
+                    "type": "datasources",
+                    "kind": "WindowsEvent",
+                    "name": "System",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "eventLogName": "System",
+                        "eventTypes": [
+                            {
+                                "eventType": "Error"
+                            },
+                            {
+                                "eventType": "Warning"
+                            }
+                        ]
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+                },
+                {
+                    "type": "datasources",
+                    "kind": "WindowsEvent",
+                    "name": "Application",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "eventLogName": "Application",
+                        "eventTypes": [
+                            {
+                                "eventType": "Error"
+                            },
+                            {
+                                "eventType": "Warning"
+                            }
+                        ]
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+                },
+
+
+
+				{
+                    "type": "datasources",
+                    "kind": "WindowsPerformanceCounter",
+                    "name": "CPU1",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "objectName": "Processor",
+                        "instanceName": "_Total",
+                        "intervalSeconds": 10,
+                        "counterName": "% Processor Time"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+                },
+
+				{
+                    "type": "datasources",
+                    "kind": "WindowsPerformanceCounter",
+                    "name": "LogicalDisk1",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "objectName": "LogicalDisk",
+                        "instanceName": "*",
+                        "intervalSeconds": 10,
+                        "counterName": "% Free Space"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+                },
+				 {
+                    "type": "datasources",
+                    "kind": "WindowsPerformanceCounter",
+                    "name": "LogicalDisk2",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "objectName": "LogicalDisk",
+                        "instanceName": "C:",
+                        "intervalSeconds": 10,
+                        "counterName": "Free Megabytes"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+				},
+
+				{
+                    "type": "datasources",
+                    "kind": "WindowsPerformanceCounter",
+                    "name": "PageFile1",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "objectName": "Paging File",
+                        "instanceName": "_Total",
+                        "intervalSeconds": 10,
+                        "counterName": "% Usage"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+				},
+
+				{
+                    "type": "datasources",
+                    "kind": "WindowsPerformanceCounter",
+                    "name": "Process1",
+                    "apiVersion": "2015-11-01-preview",
+                    "properties": {
+                        "objectName": "Process",
+                        "instanceName": "*",
+                        "intervalSeconds": 10,
+                        "counterName": "% Processor Time"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+                    ]
+				},
+				
+				{
+			      "apiVersion": "2015-11-01-preview",
+			      "name": "[variables('securitySolution')]",
+			      "type": "Microsoft.OperationsManagement/solutions",
+			      "location": "[parameters('omsWorkspaceRegion')]",
+			      "id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('securitySolution'))]",
+			      "dependsOn": [
+			        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      ],
+			      "properties": {
+			        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      },
+			      "plan": {
+			        "name": "[variables('securitySolution')]",
+			        "publisher": "Microsoft",
+			        "product": "[concat('OMSGallery/', variables('securitySolutionName'))]",
+			        "promotionCode": ""
+			      }
+			    },
+			    {
+			      "apiVersion": "2015-11-01-preview",
+			      "name": "[variables('updatesSolution')]",
+			      "type": "Microsoft.OperationsManagement/solutions",
+			      "location": "[parameters('omsWorkspaceRegion')]",
+			      "id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('updatesSolution'))]",
+			      "dependsOn": [
+			        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      ],
+			      "properties": {
+			        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      },
+			      "plan": {
+			        "name": "[variables('updatesSolution')]",
+			        "publisher": "Microsoft",
+			        "product": "[concat('OMSGallery/', variables('updatesSolutionName'))]",
+			        "promotionCode": ""
+			      }
+			    },
+			    {
+			      "apiVersion": "2015-11-01-preview",
+			      "name": "[variables('changeTrackingSolution')]",
+			      "type": "Microsoft.OperationsManagement/solutions",
+			      "location": "[parameters('omsWorkspaceRegion')]",
+			      "id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('changeTrackingSolution'))]",
+			      "dependsOn": [
+			        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      ],
+			      "properties": {
+			        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      },
+			      "plan": {
+			        "name": "[variables('changeTrackingSolution')]",
+			        "publisher": "Microsoft",
+			        "product": "[concat('OMSGallery/', variables('changeTrackingSolutionName'))]",
+			        "promotionCode": ""
+			      }
+			    },
+			    {
+			      "apiVersion": "2015-11-01-preview",
+			      "name": "[variables('agentSolution')]",
+			      "type": "Microsoft.OperationsManagement/solutions",
+			      "location": "[parameters('omsWorkspaceRegion')]",
+			      "id": "[resourceId('Microsoft.OperationsManagement/solutions', variables('agentSolution'))]",
+			      "dependsOn": [
+			        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      ],
+			      "properties": {
+			        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName'))]"
+			      },
+			      "plan": {
+			        "name": "[variables('agentSolution')]",
+			        "publisher": "Microsoft",
+			        "product": "[concat('OMSGallery/', variables('agentSolutionName'))]",
+			        "promotionCode": ""
+			      }
+			    }
+
+				
+  ],
+    "outputs": { }
+
+  }
